@@ -1,0 +1,16 @@
+{
+    "name": "Launch Node Server",
+    "type": "node",
+    "program": "${workspaceRoot}/src/app.ts",
+    "stopOnEntry": false,
+    "args": [],
+    "cwd": "${workspaceRoot}",
+    "runtimeExecutable": null,
+    "runtimeArgs": ["--nolazy"],
+    "env": {
+        "NODE_ENV": "development"
+    },
+    "sourceMaps": true,
+    "outDir": "${workspaceRoot}/bin",
+    "request": "launch"
+}
