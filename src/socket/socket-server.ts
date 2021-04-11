@@ -15,9 +15,9 @@ const io = require('socket.io')(httpServer, {
 io.on('connection', (socket:any) => {
   console.log('connect');
 
-  socket.on("test-event", (event:any)=>{
+  socket.on("create-conversation", (event:any)=>{
     if(!!event){
-      console.log(`test event: ${event.prop}`)
+      console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
     }
   })
 });
