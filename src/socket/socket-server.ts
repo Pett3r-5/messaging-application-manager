@@ -1,4 +1,6 @@
 import User from "../models/User";
+//import { ConversationSchema } from "../schemas/ConversationSchema";
+import Conversation from '../models/Conversation'
 
 const httpServer = require('http').createServer((req:any, res:any) => {
   // serve the index.html file
@@ -16,9 +18,10 @@ const io = require('socket.io')(httpServer, {
 io.on('connection', (socket:any) => {
   console.log('connect');
 
-  socket.on("create-conversation", (event:User)=>{
+  socket.on("create-conversation", (event:Conversation)=>{
     if(!!event){
       console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
+      //conversationService.save(event)
     }
   })
 });
