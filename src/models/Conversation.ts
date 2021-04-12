@@ -3,8 +3,7 @@ import User from "./User";
 import Video from "./Video";
 
 export default interface Conversation {
-    id: string
+    conversationLink: string
     users: User[],
-    messages: Message[],
-    videos: Video[]
+    messages: Message[]
 }

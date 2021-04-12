@@ -1,3 +1,4 @@
+import User from "../models/User";
 
 const httpServer = require('http').createServer((req:any, res:any) => {
   // serve the index.html file
@@ -15,7 +16,7 @@ const io = require('socket.io')(httpServer, {
 io.on('connection', (socket:any) => {
   console.log('connect');
 
-  socket.on("create-conversation", (event:any)=>{
+  socket.on("create-conversation", (event:User)=>{
     if(!!event){
       console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
     }
