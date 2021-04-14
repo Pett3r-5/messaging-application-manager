@@ -1,24 +1,30 @@
 import mongoose, { Schema } from "mongoose"
 import Message from '../models/Message'
-import User from '../models/User'
+import { UserEntity } from '../schemas/UserSchema'
 
 type MessageDocument = Message & mongoose.Document
 
 const messageSchema = new mongoose.Schema<MessageDocument>({
+    _id: {
+        type: mongoose.Types.ObjectId
+    },
     content: { 
         type: String, required: function(message:string):boolean { return !!message }
     },
-    sentBy: [{ 
-        type: User, required: true 
-    }],
+    sentBy: { 
+        type: UserEntity.schema, required: true 
+    },
     createdAt: { 
         type: Date, required: true 
     },
-    seenAt: {
-        type: Date, required: false 
+    seen: {
+        type: Boolean, required: false 
+    },
+    deleted: {
+        type: Boolean, required: false 
     }
 }, {strict: true})
 
-const Message = mongoose.model<MessageDocument>('Cafe', messageSchema)
+const MessageEntity = mongoose.model<MessageDocument>('Message', messageSchema)
 
-export { Message, MessageDocument }
+export { MessageEntity, MessageDocument }
