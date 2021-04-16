@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema<UserDocument>({
         type: String, required: true 
     },
     isConversationOwner: { 
-        type: Boolean, required: true 
+        type: Boolean, required: false 
     },
     isOnline: { 
         type: Boolean, required: true 

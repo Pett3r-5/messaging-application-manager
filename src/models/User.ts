@@ -3,8 +3,8 @@
 export default class User {
     clientId: string
     name: string
-    isConversationOwner: boolean
-    isOnline: boolean
+    isConversationOwner?: boolean
+    isOnline?: boolean
 
     constructor(clientId: string, name: string, isConversationOwner: boolean, isOnline: boolean){
             this.name = name;

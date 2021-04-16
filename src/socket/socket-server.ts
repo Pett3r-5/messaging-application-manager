@@ -3,6 +3,8 @@ import User from "../models/User";
 import Conversation from '../models/Conversation'
 import ConversationRepository from '../repositories/ConversationRepository'
 import mongoose from 'mongoose'
+import Message from "../models/Message";
+import MessageRepository from "../repositories/MessageRepository";
 
 async function init() {
   const httpServer = require('http').createServer((req:any, res:any) => {
@@ -27,6 +29,7 @@ async function init() {
   });
   
   const conversationRepository:ConversationRepository = new ConversationRepository();
+  const messagenRepository:MessageRepository = new MessageRepository()
   
   io.on('connection', (socket:any) => {
     console.log('connect');
@@ -38,6 +41,21 @@ async function init() {
         try {
           const res = await conversationRepository.save(event)
           socket.emit("conversation-created", res)
+        } catch(error) {
+          console.log(error)
+        }
+      }
+    })
+
+    socket.on("post-message", async (event:Message)=>{
+      if(!!event) {
+        event.sentBy.isOnline = true
+        event.seen = false
+        console.log("post-message")
+        console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
+        try {
+          const res = await messagenRepository.createMessage(event)
+          socket.emit("message-posted", res)
         } catch(error) {
           console.log(error)
         }
