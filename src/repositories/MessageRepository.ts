@@ -28,4 +28,8 @@ export default class MessageRepository {
         )
     }
 
+    public getMessageById(id:string) {
+        return MessageEntity.findById(id)
+    }
+
 }

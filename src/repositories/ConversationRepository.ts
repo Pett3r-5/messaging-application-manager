@@ -1,12 +1,16 @@
 import { ConversationEntity, ConversationDocument } from '../schemas/ConversationSchema'
 import ConversationModel from '../models/Conversation'
-import mongoose from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 
 export default class ConversationRepository {
     constructor(){}
 
     public getConversationByUser(clientId: string) {
         return ConversationEntity.findOne({ "users.clientId": clientId }).populate('messages.message')
+    }
+
+    public getConversationById(id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> {
+        return ConversationEntity.findById(id)
     }
 
     public getConversationByUrlLink(conversationLink: string) {
