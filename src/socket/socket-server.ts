@@ -59,11 +59,15 @@ async function init() {
 
     socket.on('join-conversation', async (event: {conversationLink: string, user: User})=>{
       try {
+        event.user.isConversationOwner = false;
+        event.user.isOnline = true;
         let conv:any =await conversationRepository.addUserByConversationLink(event.conversationLink, event.user)
-        conv.messages = await messageService.populateMessages(conv.messages)
-
-        socket.join(event.conversationLink)
-        io.to(conv.conversationLink).emit("conversation-joined", conv)
+        if(!!conv) {
+          conv.messages = await messageService.populateMessages(conv.messages)
+          socket.join(event.conversationLink)
+          io.to(conv.conversationLink).emit("conversation-joined", conv)
+        }
+        
 
       } catch(error) {
         console.log(error)
