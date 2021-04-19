@@ -1,12 +1,13 @@
 import { ConversationEntity, ConversationDocument } from '../schemas/ConversationSchema'
 import ConversationModel from '../models/Conversation'
 import mongoose, { Model } from 'mongoose'
+import User from '../models/User'
 
 export default class ConversationRepository {
     constructor(){}
 
     public getConversationByUser(clientId: string) {
-        return ConversationEntity.findOne({ "users.clientId": clientId }).populate('messages.message')
+        return ConversationEntity.findOne({ "users.clientId": clientId })
     }
 
     public getConversationById(id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> {
@@ -14,7 +15,21 @@ export default class ConversationRepository {
     }
 
     public getConversationByUrlLink(conversationLink: string) {
-        return ConversationEntity.findOne({ "conversationLink": conversationLink }).populate('messages.message')
+        return ConversationEntity.findOne({ "conversationLink": conversationLink })
+    }
+
+    public addUserByConversationLink(conversationLink:string, user: User) {
+        
+        return ConversationEntity.findOneAndUpdate({ "conversationLink": conversationLink },
+        {$push: 
+            {   
+                clientId: user.clientId,
+                name: user.name,
+                isConversationOwner: false,
+                isOnline: true 
+            } 
+        }
+        )
     }
 
     public save(conversation: ConversationModel) {
