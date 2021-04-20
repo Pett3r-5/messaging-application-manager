@@ -6,8 +6,8 @@ import User from '../models/User'
 export default class ConversationRepository {
     constructor(){}
 
-    public getConversationByUser(clientId: string) {
-        return ConversationEntity.findOne({ "users.clientId": clientId })
+    public getConversationsByClientId(clientId: string) {
+        return ConversationEntity.find({ "users.clientId": clientId })
     }
 
     public getConversationById(id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> {

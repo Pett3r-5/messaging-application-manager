@@ -8,6 +8,7 @@ import MessageRepository from "../repositories/MessageRepository";
 import { ConversationDocument } from "../schemas/ConversationSchema";
 import { v4 } from 'uuid'
 import MessageService from "../services/MessageService";
+import ConversationService from "../services/ConversationService";
 
 async function init() {
   const httpServer = require('http').createServer((req: any, res: any) => {
@@ -30,8 +31,8 @@ async function init() {
       origin: '*',
     }
   });
-
-  const conversationRepository: ConversationRepository = new ConversationRepository();
+  
+  const conversationService: ConversationService = new ConversationService(new ConversationRepository());
   const messageService: MessageService = new MessageService(new MessageRepository())
 
   io.on('connection', (socket: any) => {
@@ -43,7 +44,7 @@ async function init() {
         event.conversationLink = uuid
         event.users[0].isOnline = true
         try {
-          const res = await conversationRepository.save(event)
+          const res = await conversationService.save(event)
 
           console.log(`conversation created: ${JSON.stringify(res, undefined, 4)}`)
           socket.join(uuid)
@@ -59,9 +60,8 @@ async function init() {
 
     socket.on('join-conversation', async (event: {conversationLink: string, user: User})=>{
       try {
-        event.user.isConversationOwner = false;
-        event.user.isOnline = true;
-        let conv:any =await conversationRepository.addUserByConversationLink(event.conversationLink, event.user)
+        
+        let conv:any =await conversationService.addUserByConversationLink(event.conversationLink, event.user)
         if(!!conv) {
           conv.messages = await messageService.populateMessages(conv.messages)
           socket.room = event.conversationLink;
@@ -99,8 +99,8 @@ async function init() {
             return el
           })
 
-          await conversationRepository.save(event.conversation)
-          let updatedConv: any = await conversationRepository.getConversationById(String(event.conversation._id))
+          await conversationService.save(event.conversation)
+          let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
           updatedConv.messages = await messageService.populateMessages(updatedConv.messages)
 
           console.log("to be returned:")
@@ -110,6 +110,18 @@ async function init() {
         } catch (error) {
           console.log(error)
         }
+      }
+    })
+
+    socket.on("request-conversation-list", async (userId:string)=>{
+      console.log("userId:")
+      console.log(userId)
+      const conversationList = await conversationService.getConversationsByClientId(userId)
+      console.log("conversationList:")
+      console.log(conversationList)
+      if(!!conversationList && conversationList.length > 0) {
+        socket.join(userId)
+        io.to(userId).emit("listen-conversation-list", conversationList)
       }
     })
   });
