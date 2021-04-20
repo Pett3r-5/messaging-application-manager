@@ -64,8 +64,9 @@ async function init() {
         let conv:any =await conversationRepository.addUserByConversationLink(event.conversationLink, event.user)
         if(!!conv) {
           conv.messages = await messageService.populateMessages(conv.messages)
+          socket.room = event.conversationLink;
           socket.join(event.conversationLink)
-          io.to(conv.conversationLink).emit("conversation-joined", conv)
+          io.to(event.conversationLink).emit("conversation-joined", conv)
         }
         
 
