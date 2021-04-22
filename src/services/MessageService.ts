@@ -35,4 +35,6 @@ export default class MessageService {
         return Promise.all(messageRequests)
     }
 
+    public updateUserName= (clientId:string, name:string)=> this.messageRepository.updateUserName(clientId, name)
+
 }

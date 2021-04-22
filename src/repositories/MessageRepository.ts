@@ -5,12 +5,9 @@ import mongoose from 'mongoose'
 export default class MessageRepository {
     constructor(){}
 
-    public createMessage(message: MessageModel) {
-        return MessageEntity.create(message)
-    }
+    public createMessage = (message: MessageModel)=> MessageEntity.create(message)
 
-    public updateMessage(message: MessageModel) {
-        return MessageEntity.findOneAndUpdate(
+    public updateMessage = (message: MessageModel)=> (MessageEntity.findOneAndUpdate(
             {"_id": message._id }, 
             {  "content": message.content,
                 "sentBy": message.sentBy,
@@ -18,11 +15,13 @@ export default class MessageRepository {
                 "deleted": message.deleted
             },
             {upsert: true}
-        )
-    }
+        ))
 
-    public getMessageById(id:string) {
-        return MessageEntity.findById(id)
-    }
+    public getMessageById = (id:string)=> MessageEntity.findById(id)
+
+    public updateUserName = (clientId:string, name:string)=> (MessageEntity.updateMany(
+        {"sentBy.clientId": clientId }, 
+        {   "$set": {"sentBy.name": name }}
+    ))
 
 }

@@ -6,21 +6,14 @@ import User from '../models/User'
 export default class ConversationRepository {
     constructor(){}
 
-    public getConversationsByClientId(clientId: string) {
-        return ConversationEntity.find({ "users.clientId": clientId })
-    }
+    public getConversationsByClientId = (clientId: string)=> ConversationEntity.find({ "users.clientId": clientId })
 
-    public getConversationById(id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> {
-        return ConversationEntity.findById(id)
-    }
+    public getConversationById= (id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> => ConversationEntity.findById(id)
 
-    public getConversationByUrlLink(conversationLink: string) {
-        return ConversationEntity.findOne({ "conversationLink": conversationLink })
-    }
+    public getConversationByUrlLink= (conversationLink: string)=> ConversationEntity.findOne({ "conversationLink": conversationLink })
 
-    public addUserByConversationLink(conversationLink:string, user: User) {
-        
-        return ConversationEntity.findOneAndUpdate({ "conversationLink": conversationLink },
+    public addUserByConversationLink= (conversationLink:string, user: User)=> (
+        ConversationEntity.findOneAndUpdate({ "conversationLink": conversationLink },
         {$push: 
             {   
                 clientId: user.clientId,
@@ -28,9 +21,9 @@ export default class ConversationRepository {
                 isConversationOwner: false,
                 isOnline: true 
             } 
-        }
-        )
-    }
+        },
+        {new: true}
+        ))
 
     public save(conversation: ConversationModel) {
         if(!conversation) {
@@ -51,7 +44,9 @@ export default class ConversationRepository {
         )
     }
 
-    public deleteConversation(id:string) {
-        return ConversationEntity.findByIdAndDelete(id)
-    }
+    public updateUserName = (id:string, name:string)=> (ConversationEntity.updateMany(
+        { "users.clientId": id },
+        { "users.$.name": name }))
+
+    public deleteConversation= (id:string) =>  ConversationEntity.findByIdAndDelete(id)
 }

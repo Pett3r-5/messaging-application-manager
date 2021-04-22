@@ -9,6 +9,8 @@ import { ConversationDocument } from "../schemas/ConversationSchema";
 import { v4 } from 'uuid'
 import MessageService from "../services/MessageService";
 import ConversationService from "../services/ConversationService";
+import UserService from "../services/UserService";
+import UserRepository from "../repositories/UserRepository";
 
 async function init() {
   const httpServer = require('http').createServer((req: any, res: any) => {
@@ -31,9 +33,10 @@ async function init() {
       origin: '*',
     }
   });
-  
+
   const conversationService: ConversationService = new ConversationService(new ConversationRepository());
   const messageService: MessageService = new MessageService(new MessageRepository())
+  const userService: UserService = new UserService(new UserRepository())
 
   io.on('connection', (socket: any) => {
     console.log('connect');
@@ -58,24 +61,60 @@ async function init() {
       }
     })
 
-    socket.on('join-conversation', async (event: {conversationLink: string, user: User})=>{
+    socket.on('join-conversation', async (event: { conversationLink: string, user: User }) => {
       try {
-        
-        let conv:any =await conversationService.addUserByConversationLink(event.conversationLink, event.user)
-        if(!!conv) {
+
+        let conv: any = await conversationService.addUserByConversationLink(event.conversationLink, event.user)
+        if (!!conv) {
           conv.messages = await messageService.populateMessages(conv.messages)
           socket.room = event.conversationLink;
           socket.join(event.conversationLink)
           io.to(event.conversationLink).emit("conversation-joined", conv)
         }
-        
 
-      } catch(error) {
+
+      } catch (error) {
         console.log(error)
       }
     })
 
-    socket.on('leave-conversation', (conversationLink:string)=>{
+    socket.on("get-conversation", async (event: { conversationLink: string}) => {
+      try {
+        let conv: any = await conversationService.getConversationByUrlLink(event.conversationLink)
+
+        if (!!conv) {
+          conv.messages = await messageService.populateMessages(conv.messages)
+          socket.room = event.conversationLink;
+          socket.join(event.conversationLink)
+          io.to(event.conversationLink).emit("conversation-joined", conv)
+        }
+
+
+      } catch (error) {
+        console.log(error)
+      }
+    })
+
+    socket.on("edit-username", async (user:User)=>{
+      console.log("edit-username")
+      console.log(user)
+      let userUpserted
+      try {
+        userUpserted = await userService.updateName(user)
+        await Promise.all([
+          messageService.updateUserName(user.clientId, user.name),
+          conversationService.updateUserName(user.clientId, user.name)
+        ])
+      } catch (error) {
+        console.log(error)
+      }
+      console.log(userUpserted)
+      socket.join(user.clientId)
+      io.to(user.clientId).emit("user-data", userUpserted)
+      
+    })
+
+    socket.on('leave-conversation', (conversationLink: string) => {
 
     })
 
@@ -113,15 +152,21 @@ async function init() {
       }
     })
 
-    socket.on("request-conversation-list", async (userId:string)=>{
-      console.log("userId:")
-      console.log(userId)
-      const conversationList = await conversationService.getConversationsByClientId(userId)
-      console.log("conversationList:")
-      console.log(conversationList)
-      if(!!conversationList && conversationList.length > 0) {
-        socket.join(userId)
-        io.to(userId).emit("listen-conversation-list", conversationList)
+    socket.on("request-conversation-list", async (user: User) => {
+      let conversationList
+      let userUpserted
+      try {
+        conversationList = await conversationService.getConversationsByClientId(user.clientId)
+        userUpserted = await userService.findOrCreateUser(user)
+      } catch (error) {
+        console.log(error)
+      }
+
+      socket.join(user.clientId)
+      io.to(user.clientId).emit("user-data", userUpserted)
+
+      if (!!conversationList && conversationList.length > 0) {
+        io.to(user.clientId).emit("listen-conversation-list", conversationList)
       }
     })
   });

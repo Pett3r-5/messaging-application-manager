@@ -11,17 +11,12 @@ export default class ConversationService {
         this.conversationRepository = conversationRepository;
     }
 
-    public getConversationsByClientId(clientId: string) {
-        return this.conversationRepository.getConversationsByClientId(clientId)
-    }
+    public getConversationsByClientId = (clientId: string)=> this.conversationRepository.getConversationsByClientId(clientId)
 
-    public getConversationById(id: string):mongoose.Query<ConversationDocument | null, ConversationDocument> {
-        return this.conversationRepository.getConversationById(id)
-    }
+    public getConversationById = (id: string):mongoose.Query<ConversationDocument | null, ConversationDocument>=> (
+        this.conversationRepository.getConversationById(id))
 
-    public getConversationByUrlLink(conversationLink: string) {
-        return this.conversationRepository.getConversationByUrlLink(conversationLink)
-    }
+    public getConversationByUrlLink = (conversationLink: string)=> this.conversationRepository.getConversationByUrlLink(conversationLink)
 
     public addUserByConversationLink(conversationLink:string, user: User) {
         user.isConversationOwner = false;
@@ -29,11 +24,9 @@ export default class ConversationService {
         return this.conversationRepository.addUserByConversationLink(conversationLink, user)
     }
 
-    public save(conversation: ConversationModel) {
-        return this.conversationRepository.save(conversation)
-    }
+    public save= (conversation: ConversationModel)=> this.conversationRepository.save(conversation)
+    
+    public updateUserName = (id:string, name:string)=> this.conversationRepository.updateUserName(id, name)
 
-    public deleteConversation(id:string) {
-        return this.conversationRepository.deleteConversation(id)
-    }
+    public deleteConversation= (id:string)=> this.conversationRepository.deleteConversation(id)
 }
