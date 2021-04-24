@@ -13,11 +13,14 @@ const conversationSchema = new mongoose.Schema<ConversationDocument>({
     conversationLink: { 
         type: String, required: true 
     },
+    subject: { 
+        type: String, required: false 
+    },
     isPublic: { 
         type: Boolean, required: false 
     },
-    subject: { 
-        type: String, required: false 
+    persist: { 
+        type: Boolean, required: false 
     },
     users: [{ 
         type: UserEntity.schema, required: true 

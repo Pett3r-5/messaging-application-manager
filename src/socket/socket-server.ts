@@ -21,7 +21,7 @@ async function init() {
   });
 
   try {
-    await mongoose.connect('mongodb://localhost:27017/test')
+    await mongoose.connect('mongodb://localhost:27017/test', { useUnifiedTopology: true, useNewUrlParser: true })
   } catch (error) {
     console.log("mongoose error: ")
     console.log(error)
@@ -43,6 +43,9 @@ async function init() {
 
     socket.on("create-conversation", async (event: Conversation) => {
       if (!!event) {
+        console.log("create-conversation");
+        console.log(JSON.stringify(event, undefined, 4));
+        
         const uuid = v4()
         event.conversationLink = uuid
         event.users[0].isOnline = true

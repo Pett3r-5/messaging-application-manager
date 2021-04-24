@@ -6,14 +6,9 @@ import Video from "./Video";
 export default interface Conversation {
     _id?: mongoose.Types.ObjectId
     conversationLink: string
-    isPublic?:boolean
     subject?:string
+    isPublic?:boolean
+    persist?:boolean
     users: User[]
     messages: Schema.Types.ObjectId[] | string[]
-
-    //constructor(conversationLink: string, users: User[], messages: Message[]){
-   //         this.conversationLink = conversationLink
-    //        this.users = users
-    //        this.messages = messages
-    //}
 }
