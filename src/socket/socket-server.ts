@@ -11,6 +11,9 @@ import MessageService from "../services/MessageService";
 import ConversationService from "../services/ConversationService";
 import UserService from "../services/UserService";
 import UserRepository from "../repositories/UserRepository";
+import axios from "axios";
+
+const chatServiceBaseUrl = "http://localhost:6000"
 
 async function init() {
   const httpServer = require('http').createServer((req: any, res: any) => {
@@ -44,18 +47,20 @@ async function init() {
     socket.on("create-conversation", async (event: Conversation) => {
       if (!!event) {
         console.log("create-conversation");
-        console.log(JSON.stringify(event, undefined, 4));
         
         const uuid = v4()
         event.conversationLink = uuid
         event.users[0].isOnline = true
         try {
-          const res = await conversationService.save(event)
-
-          console.log(`conversation created: ${JSON.stringify(res, undefined, 4)}`)
+          const { data } = await axios.post(`${chatServiceBaseUrl}/conversation`, event)
+          
           socket.join(uuid)
           socket.room = uuid;
-          io.to(uuid).emit("conversation-joined", res)
+          io.to(uuid).emit("conversation-joined", {
+            conversationLink: data.conversationLink, messages: data.messages,
+            subject: data.subject, isPublic: data.isPublic, persist: data.persist, 
+            users: data.users
+          })
         } catch (error) {
           console.log(error)
         }
