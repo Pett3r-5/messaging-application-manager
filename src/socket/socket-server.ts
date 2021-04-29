@@ -5,7 +5,7 @@ import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
 
-const chatServiceBaseUrl = "http://localhost:6000"
+const chatServiceBaseUrl = "http://localhost:7011"
 
 async function init() {
   const httpServer = require('http').createServer((req: any, res: any) => {
@@ -44,15 +44,7 @@ async function init() {
 
           socket.join(uuid)
           socket.room = uuid;
-          io.to(uuid).emit("conversation-joined", {
-            _id: data._id,
-            conversationLink: data.conversationLink,
-            messages: data.messages,
-            subject: data.subject,
-            isPublic: data.isPublic,
-            persist: data.persist,
-            users: data.users
-          })
+          io.to(uuid).emit("conversation-joined", {...data})
         } catch (error) {
           console.log(error)
         }
@@ -60,6 +52,42 @@ async function init() {
 
       }
     })
+
+
+    socket.on("post-message", async (event: { message: Message, conversation: Conversation }) => {
+      if (!!event) {
+        event.message.sentBy.isOnline = true
+        event.message.seen = false
+
+        console.log("post-message before:")
+        console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
+        try {
+          const { data } = await axios.post(`${chatServiceBaseUrl}/message`, event.message)
+          
+          event.conversation.messages = (event.conversation.messages  as any[]).map((message:any)=>message._id)
+
+          event.conversation.messages.push(data._id)
+          event.conversation.users = event.conversation.users.map(el => {
+            if (el.clientId === event.message.sentBy.clientId) {
+              el.isOnline = true
+            }
+            return el
+          })
+          
+          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl}/conversation`, event.conversation)
+
+          //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
+          console.log("post-message:")
+          console.log(JSON.stringify(updatedConv.data, undefined, 4))
+
+          io.to(updatedConv.data.conversationLink).emit("message-posted", {...updatedConv.data})
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    })
+
+
 
     socket.on('join-conversation', async (event: { conversationLink: string, user: User }) => {
       console.log("join-conversation");
@@ -118,91 +146,13 @@ async function init() {
       }
     })
 
-    socket.on("edit-username", async (user: User) => {
-      console.log("edit-username")
-      console.log(user)
-      try {
-        const { data } = await axios.put(`${chatServiceBaseUrl}/user/name/${user.name}`, { clientId: user.clientId, name: user.name })
-        await Promise.all([
-          axios.put(`${chatServiceBaseUrl}/message/user/name`, { id: user.clientId, name: user.name }),
-          axios.put(`${chatServiceBaseUrl}/conversation/users/name`, { id: user.clientId, name: user.name })
-        ])
-
-        console.log(data)
-        socket.join(user.clientId)
-        io.to(user.clientId).emit("user-data", {
-          clientId: data.clientId,
-          name: data.name,
-          isConversationOwner: data.isConversationOwner,
-          isOnline: data.isOnline
-        })
-      } catch (error) {
-        console.log(error)
-      }
-    })
 
     socket.on('leave-conversation', (conversationLink: string) => {
 
     })
 
-    socket.on("post-message", async (event: { message: Message, conversation: Conversation }) => {
-      if (!!event) {
-        event.message.sentBy.isOnline = true
-        event.message.seen = false
+    
 
-        console.log("post-message before:")
-        console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
-        try {
-          const { data } = await axios.post(`${chatServiceBaseUrl}/message`, event.message)
-          
-          event.conversation.messages = (event.conversation.messages  as any[]).map((message:any)=>message._id)
-
-          event.conversation.messages.push(data._id)
-          event.conversation.users = event.conversation.users.map(el => {
-            if (el.clientId === event.message.sentBy.clientId) {
-              el.isOnline = true
-            }
-            return el
-          })
-          
-          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl}/conversation`, event.conversation)
-
-          //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
-          console.log("post-message:")
-          console.log(JSON.stringify(updatedConv.data, undefined, 4))
-
-          io.to(updatedConv.data.conversationLink).emit("message-posted", {
-            _id: updatedConv.data._id,
-            conversationLink: updatedConv.data.conversationLink,
-            subject: updatedConv.data.subject || "",
-            isPublic: updatedConv.data.isPublic || true,
-            persist: updatedConv.data.isPublic || false,
-            messages: updatedConv.data.messages,
-            users: updatedConv.data.users
-          })
-        } catch (error) {
-          console.log(error)
-        }
-      }
-    })
-
-    socket.on("request-conversation-list", async (user: User) => {
-      let conversationList: AxiosResponse<Array<Conversation>> | undefined
-      let userUpserted
-      try {
-        conversationList = await axios.get(`${chatServiceBaseUrl}/conversation/clientId/${user.clientId}`)
-        userUpserted = await axios.put(`${chatServiceBaseUrl}/user`, user)
-      } catch (error) {
-        console.log(error)
-      }
-      
-      socket.join(user.clientId)
-      io.to(user.clientId).emit("user-data", userUpserted?.data)
-
-      if (!!conversationList && !!conversationList.data && conversationList.data.length > 0) {
-        io.to(user.clientId).emit("listen-conversation-list", [...conversationList.data])
-      }
-    })
   });
 
   io.listen(5000)
