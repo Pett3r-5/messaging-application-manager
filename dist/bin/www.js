@@ -5,7 +5,7 @@
  */
 exports.__esModule = true;
 var app = require('../app');
-var debug = require('debug')('chat-application-server:server');
+var debug = require('debug')('chat-application-manager:server');
 var http = require('http');
 /**
  * Get port from environment and store in Express.

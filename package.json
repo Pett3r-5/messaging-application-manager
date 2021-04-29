@@ -1,5 +1,5 @@
 {
-  "name": "chat-application-server",
+  "name": "chat-application-manager",
   "version": "0.0.0",
   "private": true,
   "scripts": {
