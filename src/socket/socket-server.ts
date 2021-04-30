@@ -148,7 +148,7 @@ async function init() {
 
 
     socket.on('leave-conversation', (conversationLink: string) => {
-
+      socket.leave(conversationLink);
     })
 
     
