@@ -1,7 +1,6 @@
 {
   "name": "chat-application-manager",
   "version": "0.0.0",
-  "type": "module",
   "private": true,
   "scripts": {
     "start": "node ./dist/socket/socket-server.js",
