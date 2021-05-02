@@ -1,1 +1,1 @@
-web: node ./src/socket/socket-server
+web: node ./src/socket/socket-server.ts
