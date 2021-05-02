@@ -5,7 +5,17 @@ import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
 
-const chatServiceBaseUrl = "http://localhost:7011"
+interface ChatServiceBaseUrl {
+  [s:string]:string | undefined
+}
+
+const chatServiceBaseUrl:ChatServiceBaseUrl = { 
+  local: process.env.LOCAL_BASE_URL,
+  prod: process.env.PROD_BASE_URL
+}
+
+const env = process.env.NODE_ENV || "local"
+
 
 async function init() {
   const httpServer = require('http').createServer((req: any, res: any) => {
@@ -40,7 +50,7 @@ async function init() {
         event.conversationLink = uuid
         event.users[0].isOnline = true
         try {
-          const { data } = await axios.post(`${chatServiceBaseUrl}/conversation`, event)
+          const { data } = await axios.post(`${chatServiceBaseUrl[env]}/conversation`, event)
 
           socket.join(uuid)
           socket.room = uuid;
@@ -62,7 +72,7 @@ async function init() {
         console.log("post-message before:")
         console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
         try {
-          const { data } = await axios.post(`${chatServiceBaseUrl}/message`, event.message)
+          const { data } = await axios.post(`${chatServiceBaseUrl[env]}/message`, event.message)
           
           event.conversation.messages = (event.conversation.messages  as any[]).map((message:any)=>message._id)
 
@@ -74,7 +84,7 @@ async function init() {
             return el
           })
           
-          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl}/conversation`, event.conversation)
+          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl[env]}/conversation`, event.conversation)
 
           //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
           console.log("post-message:")
@@ -94,7 +104,7 @@ async function init() {
       console.log(event);
       try {
 
-        let { data }: any = await axios.put(`${chatServiceBaseUrl}/conversation/users?conversationLink=${event.conversationLink}`, event.user)
+        let { data }: any = await axios.put(`${chatServiceBaseUrl[env]}/conversation/users?conversationLink=${event.conversationLink}`, event.user)
          
         if (!!data) {
           console.log(data)
@@ -122,7 +132,7 @@ async function init() {
       console.log(event)
 
       try {
-        let { data }: AxiosResponse<Conversation> = await axios.get(`${chatServiceBaseUrl}/conversation/conversationLink/${event.conversationLink}`)
+        let { data }: AxiosResponse<Conversation> = await axios.get(`${chatServiceBaseUrl[env]}/conversation/conversationLink/${event.conversationLink}`)
         console.log("data---------");
         console.log(data);
         if (!!data) {
@@ -155,7 +165,7 @@ async function init() {
 
   });
 
-  io.listen(5000)
+  io.listen(parseInt(process.env.PORT || '3000'))
 
 }
 
