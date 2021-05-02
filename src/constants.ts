@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 export interface ChatServiceBaseUrl {
     [s:string]:string | undefined
   }

@@ -3,15 +3,20 @@ import Conversation from '../models/Conversation'
 import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
-import { chatServiceBaseUrl } from "../constants";
 import { app } from '../app'
+require('dotenv').config()
 
 
-const env = process.env.NODE_ENV || "local"
+let chatServiceBaseUrl = process.env.LOCAL_BASE_URL
+
+if(process.env.NODE_ENV === 'prod') {
+  chatServiceBaseUrl = process.env.PROD_BASE_URL
+}
 
 
 async function init() {
   const server = app.listen(5001)
+  
 
   const io = require('socket.io')(server, {
     cors: {
@@ -25,17 +30,14 @@ async function init() {
   console.log('-----------------------------started---------------------------');
 
   io.on('connection', (socket: any) => {
-    console.log('connect');
 
     socket.on("create-conversation", async (event: Conversation) => {
       if (!!event) {
-        console.log("create-conversation");
-
         const uuid = v4()
         event.conversationLink = uuid
         event.users[0].isOnline = true
         try {
-          const { data } = await axios.post(`${chatServiceBaseUrl[env]}/conversation`, event)
+          const { data } = await axios.post(`${chatServiceBaseUrl}/conversation`, event)
 
           socket.join(uuid)
           socket.room = uuid;
@@ -54,10 +56,8 @@ async function init() {
         event.message.sentBy.isOnline = true
         event.message.seen = false
 
-        console.log("post-message before:")
-        console.log(`test event: ${JSON.stringify(event, undefined, 4)}`)
         try {
-          const { data } = await axios.post(`${chatServiceBaseUrl[env]}/message`, event.message)
+          const { data } = await axios.post(`${chatServiceBaseUrl}/message`, event.message)
           
           event.conversation.messages = (event.conversation.messages  as any[]).map((message:any)=>message._id)
 
@@ -69,11 +69,7 @@ async function init() {
             return el
           })
           
-          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl[env]}/conversation`, event.conversation)
-
-          //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
-          console.log("post-message:")
-          console.log(JSON.stringify(updatedConv.data, undefined, 4))
+          const updatedConv: AxiosResponse<Conversation> = await axios.put(`${chatServiceBaseUrl}/conversation`, event.conversation)
 
           io.to(updatedConv.data.conversationLink).emit("message-posted", {...updatedConv.data})
         } catch (error) {
@@ -85,14 +81,11 @@ async function init() {
 
 
     socket.on('join-conversation', async (event: { conversationLink: string, user: User }) => {
-      console.log("join-conversation");
-      console.log(event);
       try {
 
-        let { data }: any = await axios.put(`${chatServiceBaseUrl[env]}/conversation/users?conversationLink=${event.conversationLink}`, event.user)
+        let { data }: any = await axios.put(`${chatServiceBaseUrl}/conversation/users?conversationLink=${event.conversationLink}`, event.user)
          
         if (!!data) {
-          console.log(data)
           socket.room = event.conversationLink;
           socket.join(event.conversationLink)
           io.to(event.conversationLink).emit("conversation-joined", {
@@ -106,22 +99,17 @@ async function init() {
           })
         }
 
-
       } catch (error) {
         console.log(error)
       }
     })
 
     socket.on("get-conversation", async (event: { conversationLink: string }) => {
-      console.log("get-conversation")
-      console.log(event)
 
       try {
-        let { data }: AxiosResponse<Conversation> = await axios.get(`${chatServiceBaseUrl[env]}/conversation/conversationLink/${event.conversationLink}`)
-        console.log("data---------");
-        console.log(data);
-        if (!!data) {
+        let { data }: AxiosResponse<Conversation> = await axios.get(`${chatServiceBaseUrl}/conversation/conversationLink/${event.conversationLink}`)
 
+        if (!!data) {
           socket.room = event.conversationLink;
           socket.join(event.conversationLink)
           io.to(event.conversationLink).emit("conversation-joined", {
@@ -134,8 +122,6 @@ async function init() {
             persist: data.isPublic || false
           })
         }
-
-
       } catch (error) {
         console.log(error)
       }
@@ -150,6 +136,7 @@ async function init() {
 
   });
 
+  console.log(parseInt(process.env.PORT || '5000'))
   io.listen(parseInt(process.env.PORT || '5000'))
 
 }
