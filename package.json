@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "NODE_ENV=prod && node ./socket/socket-server",
+    "start": "NODE_ENV=prod && node ./src/socket/socket-server",
     "start:dev": "SET NODE_ENV=local & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "start:prod": "SET NODE_ENV=prod & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "debug": "npx ts-node ./src/socket/socket-server"
