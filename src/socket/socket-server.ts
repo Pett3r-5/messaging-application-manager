@@ -157,9 +157,6 @@ async function init() {
 
   io.listen(5000)
 
-  httpServer.listen(5001, () => {
-    console.log('go to http://localhost:5001');
-  });
 }
 
 init()
