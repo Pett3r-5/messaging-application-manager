@@ -5,22 +5,13 @@ import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
 import { chatServiceBaseUrl } from "../constants";
-
+import { app } from '../app'
 
 
 const env = process.env.NODE_ENV || "local"
 
 
 async function init() {
-  const httpServer = require('http').createServer((req: any, res: any) => {
-    // serve the index.html file
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Access-Control-Request-Method', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
-    res.end();
-  });
 
   try {
     await mongoose.connect('mongodb://localhost:27017/test', { useUnifiedTopology: true, useNewUrlParser: true })
@@ -29,8 +20,9 @@ async function init() {
     console.log(error)
   }
 
+  const server = app.listen(5001)
 
-  const io = require('socket.io')(httpServer, {
+  const io = require('socket.io')(server, {
     cors: {
       origin: '*',
       methods: ["GET",'OPTIONS', "POST" ],
