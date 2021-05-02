@@ -6,13 +6,15 @@
     "start": "node ./dist/socket/socket-server.js",
     "start:dev": "SET NODE_ENV=local & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "start:prod": "SET NODE_ENV=prod & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
-    "debug": "npx ts-node ./src/socket/socket-server"
+    "debug": "npx ts-node ./src/socket/socket-server",
+    "build": "tsc"
   },
   "dependencies": {
     "axios": "^0.21.1",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "mongoose": "^5.12.7",
     "morgan": "~1.9.1",
     "socket.io": "^4.0.1",
     "ts-node": "^9.1.1",
