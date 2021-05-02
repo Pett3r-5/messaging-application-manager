@@ -33,7 +33,9 @@ async function init() {
   const io = require('socket.io')(httpServer, {
     cors: {
       origin: '*',
-      methods: ["GET",'OPTIONS', "POST" ]
+      methods: ["GET",'OPTIONS', "POST" ],
+      credentials: true,
+      transport : ['websocket']
     }
   });
 
@@ -163,7 +165,7 @@ async function init() {
 
   });
 
-  io.listen(parseInt(process.env.PORT || '3000'))
+  io.listen(parseInt(process.env.PORT || '5000'))
 
 }
 
