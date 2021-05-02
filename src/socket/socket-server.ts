@@ -1,6 +1,5 @@
 import User from "../models/User";
 import Conversation from '../models/Conversation'
-import mongoose, { Schema, Types } from 'mongoose'
 import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
@@ -12,14 +11,6 @@ const env = process.env.NODE_ENV || "local"
 
 
 async function init() {
-
-  try {
-    await mongoose.connect('mongodb://localhost:27017/test', { useUnifiedTopology: true, useNewUrlParser: true })
-  } catch (error) {
-    console.log("mongoose error: ")
-    console.log(error)
-  }
-
   const server = app.listen(5001)
 
   const io = require('socket.io')(server, {
@@ -30,6 +21,8 @@ async function init() {
       transport : ['websocket']
     }
   });
+
+  console.log('-----------------------------started---------------------------');
 
   io.on('connection', (socket: any) => {
     console.log('connect');
