@@ -4,15 +4,9 @@ import mongoose, { Schema, Types } from 'mongoose'
 import Message from "../models/Message";
 import { v4 } from 'uuid'
 import axios, { AxiosResponse } from "axios";
+import { chatServiceBaseUrl } from "../constants";
 
-interface ChatServiceBaseUrl {
-  [s:string]:string | undefined
-}
 
-const chatServiceBaseUrl:ChatServiceBaseUrl = { 
-  local: process.env.LOCAL_BASE_URL,
-  prod: process.env.PROD_BASE_URL
-}
 
 const env = process.env.NODE_ENV || "local"
 
