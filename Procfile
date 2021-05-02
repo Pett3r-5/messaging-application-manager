@@ -1,1 +1,1 @@
-web: node ./src/socket/socket-server
+web: NODE_ENV=prod && node ./src/socket/socket-server
