@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "node ./src/socket/socket-server.ts",
+    "start": "node ./dist/socket/socket-server.js",
     "start:dev": "SET NODE_ENV=local & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "start:prod": "SET NODE_ENV=prod & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "debug": "npx ts-node ./src/socket/socket-server"
