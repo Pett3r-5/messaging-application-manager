@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/socket/socket-server.js",
-    "start:dev": "SET NODE_ENV=local & SET LOCAL_BASE_URL='http://localhost:7011' & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
-    "start:prod": "SET NODE_ENV=prod & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
+    "start:dev": "SET NODE_ENV=local & SET LOCAL_BASE_URL=http://localhost:7011 & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
+    "start:prod": "SET NODE_ENV=prod & LOCAL_BASE_URL=https://chat-application-service.herokuapp.com & npx nodemon --exec \"ts-node\" --ext \"ts,json\" ./src/socket/socket-server",
     "debug": "npx ts-node ./src/socket/socket-server",
     "build": "tsc"
   },

@@ -52,12 +52,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 var uuid_1 = require("uuid");
 var axios_1 = __importDefault(require("axios"));
-var constants_1 = require("../constants");
 var app_1 = require("../app");
-var env = process.env.NODE_ENV || "local";
+require('dotenv').config();
+var chatServiceBaseUrl = process.env.LOCAL_BASE_URL;
+if (process.env.NODE_ENV === 'prod') {
+    chatServiceBaseUrl = process.env.PROD_BASE_URL;
+}
 function init() {
     return __awaiter(this, void 0, void 0, function () {
-        var server, io;
+        var server, io, thisUser;
         var _this = this;
         return __generator(this, function (_a) {
             server = app_1.app.listen(5001);
@@ -71,26 +74,30 @@ function init() {
             });
             console.log('-----------------------------started---------------------------');
             io.on('connection', function (socket) {
-                console.log('connect');
+                socket.on("user-id", function (id) {
+                    thisUser = id;
+                });
                 socket.on("create-conversation", function (event) { return __awaiter(_this, void 0, void 0, function () {
                     var uuid, data, error_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                if (!!!event) return [3 /*break*/, 4];
+                                thisUser = event.users[0].clientId;
                                 console.log("create-conversation");
+                                console.log(event);
+                                if (!!!event) return [3 /*break*/, 4];
                                 uuid = uuid_1.v4();
                                 event.conversationLink = uuid;
                                 event.users[0].isOnline = true;
                                 _a.label = 1;
                             case 1:
                                 _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, axios_1["default"].post(constants_1.chatServiceBaseUrl[env] + "/conversation", event)];
+                                return [4 /*yield*/, axios_1["default"].post(chatServiceBaseUrl + "/conversation", event)];
                             case 2:
                                 data = (_a.sent()).data;
                                 socket.join(uuid);
                                 socket.room = uuid;
-                                io.to(uuid).emit("conversation-joined", __assign({}, data));
+                                io.to(uuid).emit("conversation-joined", { conversation: __assign({}, data), isOpenedConversation: true });
                                 return [3 /*break*/, 4];
                             case 3:
                                 error_1 = _a.sent();
@@ -105,15 +112,14 @@ function init() {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
+                                thisUser = event.message.sentBy.clientId;
                                 if (!!!event) return [3 /*break*/, 5];
                                 event.message.sentBy.isOnline = true;
                                 event.message.seen = false;
-                                console.log("post-message before:");
-                                console.log("test event: " + JSON.stringify(event, undefined, 4));
                                 _a.label = 1;
                             case 1:
                                 _a.trys.push([1, 4, , 5]);
-                                return [4 /*yield*/, axios_1["default"].post(constants_1.chatServiceBaseUrl[env] + "/message", event.message)];
+                                return [4 /*yield*/, axios_1["default"].post(chatServiceBaseUrl + "/message", event.message)];
                             case 2:
                                 data = (_a.sent()).data;
                                 event.conversation.messages = event.conversation.messages.map(function (message) { return message._id; });
@@ -124,14 +130,9 @@ function init() {
                                     }
                                     return el;
                                 });
-                                return [4 /*yield*/, axios_1["default"].put(constants_1.chatServiceBaseUrl[env] + "/conversation", event.conversation)
-                                    //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
-                                ];
+                                return [4 /*yield*/, axios_1["default"].put(chatServiceBaseUrl + "/conversation", event.conversation)];
                             case 3:
                                 updatedConv = _a.sent();
-                                //let updatedConv: any = await conversationService.getConversationById(String(event.conversation._id))
-                                console.log("post-message:");
-                                console.log(JSON.stringify(updatedConv.data, undefined, 4));
                                 io.to(updatedConv.data.conversationLink).emit("message-posted", __assign({}, updatedConv.data));
                                 return [3 /*break*/, 5];
                             case 4:
@@ -147,26 +148,27 @@ function init() {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                console.log("join-conversation");
-                                console.log(event);
+                                thisUser = event.user.clientId;
                                 _a.label = 1;
                             case 1:
                                 _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, axios_1["default"].put(constants_1.chatServiceBaseUrl[env] + "/conversation/users?conversationLink=" + event.conversationLink, event.user)];
+                                return [4 /*yield*/, axios_1["default"].put(chatServiceBaseUrl + "/conversation/users?conversationLink=" + event.conversationLink, event.user)];
                             case 2:
                                 data = (_a.sent()).data;
                                 if (!!data) {
-                                    console.log(data);
                                     socket.room = event.conversationLink;
                                     socket.join(event.conversationLink);
                                     io.to(event.conversationLink).emit("conversation-joined", {
-                                        _id: data._id,
-                                        conversationLink: data.conversationLink,
-                                        messages: data.messages,
-                                        subject: data.subject,
-                                        isPublic: data.isPublic,
-                                        persist: data.persist,
-                                        users: data.users
+                                        conversation: {
+                                            _id: data._id,
+                                            conversationLink: data.conversationLink,
+                                            messages: data.messages,
+                                            subject: data.subject,
+                                            isPublic: data.isPublic,
+                                            persist: data.persist,
+                                            users: data.users
+                                        },
+                                        isOpenedConversation: event.isOpenedConversation
                                     });
                                 }
                                 return [3 /*break*/, 4];
@@ -183,42 +185,84 @@ function init() {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                console.log("get-conversation");
-                                console.log(event);
-                                _a.label = 1;
+                                _a.trys.push([0, 2, , 3]);
+                                return [4 /*yield*/, axios_1["default"].get(chatServiceBaseUrl + "/conversation/conversationLink/" + event.conversationLink)];
                             case 1:
-                                _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, axios_1["default"].get(constants_1.chatServiceBaseUrl[env] + "/conversation/conversationLink/" + event.conversationLink)];
-                            case 2:
                                 data = (_a.sent()).data;
-                                console.log("data---------");
-                                console.log(data);
                                 if (!!data) {
-                                    socket.room = event.conversationLink;
-                                    socket.join(event.conversationLink);
                                     io.to(event.conversationLink).emit("conversation-joined", {
-                                        _id: data._id,
-                                        conversationLink: data.conversationLink,
-                                        messages: data.messages,
-                                        users: data.users,
-                                        subject: data.subject || "",
-                                        isPublic: data.isPublic || true,
-                                        persist: data.isPublic || false
+                                        conversation: {
+                                            _id: data._id,
+                                            conversationLink: data.conversationLink,
+                                            messages: data.messages,
+                                            users: data.users,
+                                            subject: data.subject || "",
+                                            isPublic: data.isPublic || true,
+                                            persist: data.isPublic || false
+                                        },
+                                        isOpenedConversation: true
                                     });
                                 }
-                                return [3 /*break*/, 4];
-                            case 3:
+                                return [3 /*break*/, 3];
+                            case 2:
                                 error_4 = _a.sent();
                                 console.log(error_4);
-                                return [3 /*break*/, 4];
-                            case 4: return [2 /*return*/];
+                                return [3 /*break*/, 3];
+                            case 3: return [2 /*return*/];
                         }
                     });
                 }); });
                 socket.on('leave-conversation', function (conversationLink) {
                     socket.leave(conversationLink);
                 });
+                socket.on('disconnect', function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var persistRes, deletions, data, error_5, error_6;
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    deletions = [];
+                                    _a.label = 1;
+                                case 1:
+                                    _a.trys.push([1, 3, , 4]);
+                                    return [4 /*yield*/, axios_1["default"].get(chatServiceBaseUrl + "/conversation/persist-false/clientId/" + thisUser)];
+                                case 2:
+                                    data = (_a.sent()).data;
+                                    persistRes = data;
+                                    return [3 /*break*/, 4];
+                                case 3:
+                                    error_5 = _a.sent();
+                                    console.log(error_5);
+                                    return [3 /*break*/, 4];
+                                case 4:
+                                    if (!(persistRes && persistRes.length > 0)) return [3 /*break*/, 8];
+                                    persistRes.forEach(function (el) { return __awaiter(_this, void 0, void 0, function () {
+                                        return __generator(this, function (_a) {
+                                            if (!io.sockets.adapter.rooms.get(el.conversationLink)) {
+                                                deletions.push(axios_1["default"]["delete"](chatServiceBaseUrl + "/conversation/conversationLink/" + el.conversationLink));
+                                            }
+                                            return [2 /*return*/];
+                                        });
+                                    }); });
+                                    _a.label = 5;
+                                case 5:
+                                    _a.trys.push([5, 7, , 8]);
+                                    return [4 /*yield*/, Promise.all(deletions)];
+                                case 6:
+                                    _a.sent();
+                                    return [3 /*break*/, 8];
+                                case 7:
+                                    error_6 = _a.sent();
+                                    console.log(error_6);
+                                    return [3 /*break*/, 8];
+                                case 8: return [2 /*return*/];
+                            }
+                        });
+                    });
+                });
             });
+            console.log(parseInt(process.env.PORT || '5000'));
             io.listen(parseInt(process.env.PORT || '5000'));
             return [2 /*return*/];
         });
